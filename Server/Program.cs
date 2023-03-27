@@ -1,15 +1,40 @@
-﻿using System.Net;
+﻿using System.Drawing;
 using System.Net.Sockets;
-using System.Text;
 
-
-var server = new UdpClient(45678);
-
-var remoteEP = new IPEndPoint(IPAddress.Any, 0);
+UdpClient server = new UdpClient(45678);
 
 while (true)
 {
-    var bytes = server.Receive(ref remoteEP);
-    var str = Encoding.Default.GetString(bytes);
-    Console.WriteLine(str);
+
+    var result = await server.ReceiveAsync();
+
+    new Task(async () =>
+    {
+
+        var remoteEP = result.RemoteEndPoint;
+        while (true)
+        {
+            await Task.Delay(50);
+
+            Bitmap img = new(1366, 768);
+
+            Graphics memoryGraphics = Graphics.FromImage(img);
+            memoryGraphics.CopyFromScreen(0, 0, 0, 0, img.Size);
+
+            byte[] imgBytes;
+
+            using (var stream = new MemoryStream())
+            {
+                img.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
+                imgBytes = stream.ToArray();
+            }
+
+
+            var myArray = imgBytes.Chunk(ushort.MaxValue - 29);
+
+            foreach (var array in myArray)
+                await server.SendAsync(array, array.Length, remoteEP);
+        }
+
+    }).Start();
 }
