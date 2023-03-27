@@ -21,6 +21,7 @@ while (true)
             Graphics memoryGraphics = Graphics.FromImage(img);
             memoryGraphics.CopyFromScreen(0, 0, 0, 0, img.Size);
 
+
             byte[] imgBytes;
 
             using (var stream = new MemoryStream())
@@ -30,9 +31,9 @@ while (true)
             }
 
 
-            var myArray = imgBytes.Chunk(ushort.MaxValue - 29);
+            var chunkArr = imgBytes.Chunk(ushort.MaxValue - 29);
 
-            foreach (var array in myArray)
+            foreach (var array in chunkArr)
                 await server.SendAsync(array, array.Length, remoteEP);
         }
 
